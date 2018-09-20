@@ -38,7 +38,7 @@
 	loadAreaCode();
 
     function loadAreaCode(){
-    	$.get("http://webapi.amap.com/ui/1.0/ui/geo/DistrictExplorer/assets/d_v1/area_tree.txt", function (res){
+    	$.get("https://webapi.amap.com/ui/1.0/ui/geo/DistrictExplorer/assets/d_v1/area_tree.txt", function (res){
     		var box = $(`<div style="overflow:auto;font-size:16px;color:#222;position:fixed;top:40px;left:10px;right:10px;bottom:10px;border:1px solid #0ff;"></div>`)
     		box.html(res.replace(/\n/g, "<br>").replace(/\s/g, "&nbsp;&nbsp;&nbsp;&nbsp;"));
     		$("body").append(box);
