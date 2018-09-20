@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <!--引入高德地图JSAPI -->
+    <script src="http://webapi.amap.com/maps?v=1.3&key=bad28627a358dacecb646f3fde00bd36"></script>
+
+    <!--引入UI组件库（1.0版本） -->
+    <script src="http://webapi.amap.com/ui/1.0/main.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+
+</head>
+<body>
+
+<div id="container"></div>
+<div id="wrapper" style="position:fixed;top:0;left:0;font-size: 20px;">
+	<label>输入地区编码:</label>
+	<!-- <a href="http://webapi.amap.com/ui/1.0/ui/geo/DistrictExplorer/assets/d_v1/area_tree.txt">查询地区编码</a> -->
+	<input type="text" id="adcode"/>
+	<button type="button" onclick="downloadGeo()">下载json文件</button>
+</div>
+
+<script type="text/javascript">
+
+    var map = new AMap.Map('container');
+    var districtExplorer;
+
+    AMapUI.loadUI(['geo/DistrictExplorer'], function(DistrictExplorer) {
+
+        districtExplorer = new DistrictExplorer({
+            map: map //关联的地图实例
+        });
+
+    });
+
+	loadAreaCode();
+
+    function loadAreaCode(){
+    	$.get("http://webapi.amap.com/ui/1.0/ui/geo/DistrictExplorer/assets/d_v1/area_tree.txt", function (res){
+    		var box = $(`<div style="overflow:auto;font-size:16px;color:#222;position:fixed;top:40px;left:10px;right:10px;bottom:10px;border:1px solid #0ff;"></div>`)
+    		box.html(res.replace(/\n/g, "<br>").replace(/\s/g, "&nbsp;&nbsp;&nbsp;&nbsp;"));
+    		$("body").append(box);
+    	})
+    }
+
+    // adcode = 100000 //全国的区划编码
+    function downloadGeo() {
+
+        var adcode = document.getElementById("adcode").value;
+
+        adcode = adcode || 100000;
+
+        districtExplorer.loadAreaNode(adcode, function(error, areaNode) {
+
+            if (error) {
+                console.error(error);
+                return;
+            }
+
+            var features = areaNode.getSubFeatures();
+
+            featureFormatter(features);
+
+            dowload(JSON.stringify({type:"FeatureCollection", features:features}), areaNode._data.geoData.parent.properties.name);
+
+        });
+    }
+
+    function dowload(content, filename) {
+
+        var eleLink = document.createElement('a');
+
+        eleLink.download = filename + '.json';
+        eleLink.style.display = 'none';
+
+        var blob = new Blob([content]);
+        eleLink.href = URL.createObjectURL(blob);
+
+        document.body.appendChild(eleLink);
+        eleLink.click();
+
+        document.body.removeChild(eleLink);
+
+    };
+
+    // 去除featureCollection 里面无用的字段
+    function featureFormatter(collection){
+    	collection.forEach(({properties})=>{
+    		delete(properties.centroid);
+    		delete(properties.childrenNum);
+    		delete(properties.level);
+    		delete(properties.subFeatureIndex);
+    		delete(properties.acroutes);
+    	})
+    }
+
+</script>
+
+</body>
+</html>
